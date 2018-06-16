@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Ex4 AP2</string>
+    <string name="service_started">Service Started!</string>
+    <string name="service_destroy">Service Destroyed!</string>
+</resources>
