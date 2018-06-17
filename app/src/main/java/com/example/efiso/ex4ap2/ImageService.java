@@ -23,15 +23,16 @@ import java.net.UnknownHostException;
  */
 
 public class ImageService extends Service {
-    private Socket socket;
+
     private static final int SERVERPORT = 9000;
     private static final String SERVER_IP = "10.0.2.2";
-
+    TcpClient client;
     @Override
     public void onCreate() {
         super.onCreate();
-        socket = null;
-        new Thread(new TcpClient()).start();
+        client = new TcpClient();
+        new Thread(client).start();
+
 
     }
 
@@ -56,6 +57,9 @@ public class ImageService extends Service {
     }
 
     class TcpClient implements Runnable {
+        private Socket socket;
+        DataOutputStream outToServer;
+        OutputStream output;
         @Override
         public void run() {
             boolean scanning = true;
@@ -66,14 +70,9 @@ public class ImageService extends Service {
                     InetAddress serverAddr = InetAddress.getByName(SERVER_IP);
                     socket = new Socket(serverAddr, SERVERPORT);
                     scanning = false;
-                    try{
-                        OutputStream output = socket.getOutputStream();
-                        DataOutputStream outToServer = new DataOutputStream(socket.getOutputStream());
-                        outToServer.writeBytes("hello from android" + '\n');
-                        outToServer.flush();
-                    } catch (Exception e){
-                        System.out.println(e);
-                    }
+                    output = socket.getOutputStream();
+                    outToServer = new DataOutputStream(socket.getOutputStream());
+                    sendMessage("hello from android");
                 } catch (IOException e) {
                     try {
                         Thread.sleep(2000);
@@ -82,6 +81,15 @@ public class ImageService extends Service {
                     }
                 }
 
+            }
+        }
+        public void sendMessage(String message){
+            try{
+
+                outToServer.writeBytes(message + '\n');
+                outToServer.flush();
+            } catch (Exception e){
+                System.out.println(e);
             }
         }
     }
