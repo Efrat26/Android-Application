@@ -9,52 +9,34 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.UnknownHostException;
 
 /**
  * Created by efiso on 16/06/2018.
  */
 
 public class ImageService extends Service {
-
+    private Socket socket;
+    private static final int SERVERPORT = 9000;
+    private static final String SERVER_IP = "10.0.2.2";
 
     @Override
     public void onCreate() {
         super.onCreate();
+        socket = null;
+        new Thread(new TcpClient()).start();
+
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Thread thread = new Thread(){
-            public void run(){
-                File pic = null;
-                int imgbyte = 0;
-                try {
-                    InetAddress serverAddress = InetAddress.getByName("10.0.2.2");
-                    Socket socket = new Socket(serverAddress, 8888);
-                    try {
-                        OutputStream output = socket.getOutputStream();
-                        FileInputStream fis = new FileInputStream(pic);
-                        output.write(imgbyte);
-                        output.flush();
-
-                    } catch (Exception e) {
-                        Log.e("TCP", "S Error", e);
-
-                    } finally {
-                        socket.close();
-                    }
-                } catch (Exception e) {
-                    Log.e("TCP", "C: Error", e);
-                }
-            }
-        };
-
-        thread.start();
 
         Toast.makeText(this, getResources().getString(R.string.service_started),
                 Toast.LENGTH_LONG).show();
@@ -73,34 +55,34 @@ public class ImageService extends Service {
         return null;
     }
 
-    private class ConnectToService extends AsyncTask<String,Void,String>{
+    class TcpClient implements Runnable {
         @Override
-        protected String doInBackground(String... urls) {
-            File pic = null;
-            int imgbyte = 0;
-            try {
-                InetAddress serverAddress = InetAddress.getByName("10.0.2.2");
-                Socket socket = new Socket(serverAddress, 8888);
+        public void run() {
+            boolean scanning = true;
+            int numberOfTry = 0;
+            while (scanning && numberOfTry < 2) {
+                numberOfTry++;
                 try {
-                    OutputStream output = socket.getOutputStream();
-                    FileInputStream fis = new FileInputStream(pic);
-                    output.write(imgbyte);
-                    output.flush();
-
-                } catch (Exception e) {
-                    Log.e("TCP", "S Error", e);
-
-                } finally {
-                    socket.close();
+                    InetAddress serverAddr = InetAddress.getByName(SERVER_IP);
+                    socket = new Socket(serverAddr, SERVERPORT);
+                    scanning = false;
+                    try{
+                        OutputStream output = socket.getOutputStream();
+                        DataOutputStream outToServer = new DataOutputStream(socket.getOutputStream());
+                        outToServer.writeBytes("hello from android" + '\n');
+                        outToServer.flush();
+                    } catch (Exception e){
+                        System.out.println(e);
+                    }
+                } catch (IOException e) {
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException ie) {
+                        ie.printStackTrace();
+                    }
                 }
-            } catch (Exception e) {
-                Log.e("TCP", "C: Error", e);
-            }
-            return "hello";
-        }
 
-        protected void onPostExecute(int result) {
-            // mImageView.setImageBitmap(result);
+            }
         }
     }
 }
