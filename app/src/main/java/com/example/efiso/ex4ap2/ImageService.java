@@ -4,6 +4,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.media.Image;
 import android.os.AsyncTask;
+import android.os.Environment;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -32,7 +33,11 @@ public class ImageService extends Service {
         super.onCreate();
         client = new TcpClient();
         new Thread(client).start();
-
+        File dcim = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), "Camera");
+        if(dcim != null){
+            File [] pics = dcim.listFiles();
+            System.out.println("yay");
+        }
 
     }
 
