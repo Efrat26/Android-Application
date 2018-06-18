@@ -28,16 +28,14 @@ public class ImageService extends Service {
     private static final int SERVERPORT = 9000;
     private static final String SERVER_IP = "10.0.2.2";
     TcpClient client;
+    ImageHandler imgHandler;
     @Override
     public void onCreate() {
         super.onCreate();
         client = new TcpClient();
         new Thread(client).start();
-        File dcim = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), "Camera");
-        if(dcim != null){
-            File [] pics = dcim.listFiles();
-            System.out.println("yay");
-        }
+        imgHandler = new ImageHandler();
+        imgHandler.CovertToBitMapPics();
 
     }
 
