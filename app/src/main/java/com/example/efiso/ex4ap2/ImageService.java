@@ -32,7 +32,7 @@ public class ImageService extends Service {
         super.onCreate();
         client = new TcpClient();
         new Thread(client).start();
-        imgHandler = new ImageHandler(client.socket);
+        imgHandler = new ImageHandler(client.getSocket());
         this.imageAsByte = imgHandler.getImageBytesList();
         new Thread(new Runnable() {
             @Override
@@ -40,6 +40,7 @@ public class ImageService extends Service {
                 imgHandler.sendImage(imageAsByte);
             }
         }).start();
+
 
     }
 
@@ -66,10 +67,11 @@ public class ImageService extends Service {
     class TcpClient implements Runnable {
         private Socket socket;
         ByteArrayOutputStream outToServer;
-
+        boolean connected;
 
         @Override
         public void run() {
+            connected = false;
             boolean scanning = true;
             int numberOfTry = 0;
             while (scanning && numberOfTry < 2) {
@@ -78,6 +80,7 @@ public class ImageService extends Service {
                     InetAddress serverAddr = InetAddress.getByName(SERVER_IP);
                     socket = new Socket(serverAddr, SERVER_PORT);
                     scanning = false;
+                    connected = true;
 
                 } catch (IOException e) {
                     try {
@@ -88,6 +91,10 @@ public class ImageService extends Service {
                 }
 
             }
+        }
+        public Socket getSocket() {
+            while (!connected) {}
+            return socket;
         }
 
     }

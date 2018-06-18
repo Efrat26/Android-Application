@@ -12,6 +12,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -98,12 +99,15 @@ public class ImageHandler {
         // May be better to save the streams in the support class;
         // just like the socket variable.
 
-
-        dos.writeInt(len);
+        //String numAsInt = Integer.toString(len);
+        //dos.write(numAsInt.getBytes(Charset.forName("UTF-8")));
+        dos.writeUTF("begin"+Integer.toString(len));
         dos.flush();
         if (len > 0) {
             dos.write(myByteArray, start, len);
             dos.flush();
         }
+        dos.writeUTF("end");
+        dos.flush();
     }
 }
