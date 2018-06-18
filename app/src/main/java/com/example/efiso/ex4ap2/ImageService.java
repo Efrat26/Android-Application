@@ -2,40 +2,44 @@ package com.example.efiso.ex4ap2;
 
 import android.app.Service;
 import android.content.Intent;
-import android.media.Image;
-import android.os.AsyncTask;
-import android.os.Environment;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
-import android.util.Log;
 import android.widget.Toast;
 
+import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.net.UnknownHostException;
+import java.util.List;
 
 /**
  * Created by efiso on 16/06/2018.
  */
 
 public class ImageService extends Service {
-
-    private static final int SERVERPORT = 9000;
+    private static final String start = "BEGIN";
+    private static final String end = "END";
+    private static final int SERVER_PORT = 9000;
     private static final String SERVER_IP = "10.0.2.2";
+    private List<byte[]> imageAsByte;
     TcpClient client;
     ImageHandler imgHandler;
+
     @Override
     public void onCreate() {
         super.onCreate();
         client = new TcpClient();
         new Thread(client).start();
-        imgHandler = new ImageHandler();
-        imgHandler.CovertToBitMapPics();
+        imgHandler = new ImageHandler(client.socket);
+        this.imageAsByte = imgHandler.getImageBytesList();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                imgHandler.sendImage(imageAsByte);
+            }
+        }).start();
 
     }
 
@@ -61,8 +65,9 @@ public class ImageService extends Service {
 
     class TcpClient implements Runnable {
         private Socket socket;
-        DataOutputStream outToServer;
-        OutputStream output;
+        ByteArrayOutputStream outToServer;
+
+
         @Override
         public void run() {
             boolean scanning = true;
@@ -71,11 +76,9 @@ public class ImageService extends Service {
                 numberOfTry++;
                 try {
                     InetAddress serverAddr = InetAddress.getByName(SERVER_IP);
-                    socket = new Socket(serverAddr, SERVERPORT);
+                    socket = new Socket(serverAddr, SERVER_PORT);
                     scanning = false;
-                    output = socket.getOutputStream();
-                    outToServer = new DataOutputStream(socket.getOutputStream());
-                    sendMessage("hello from android");
+
                 } catch (IOException e) {
                     try {
                         Thread.sleep(2000);
@@ -86,14 +89,6 @@ public class ImageService extends Service {
 
             }
         }
-        public void sendMessage(String message){
-            try{
 
-                outToServer.writeBytes(message + '\n');
-                outToServer.flush();
-            } catch (Exception e){
-                System.out.println(e);
-            }
-        }
     }
 }
