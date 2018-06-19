@@ -50,8 +50,8 @@ public class ImageService extends Service {
 
         notificationManagerCompat = NotificationManagerCompat.from(this);
         mBuilder = new NotificationCompat.Builder(this, "1");
-        mBuilder.setContentTitle("Picture Download")
-                .setContentText("Download in progress")
+        mBuilder.setContentTitle("Picture Transfer")
+                .setContentText("Transfer in progress")
                 .setSmallIcon(R.drawable.ic_launcher_background)
                 .setPriority(NotificationCompat.PRIORITY_LOW);
         this.alreadySent = 0;
@@ -97,8 +97,8 @@ public class ImageService extends Service {
                                         }
                                         imgHandler.setAlreadySent(1);
                                     }
-                                    imgHandler.sendImage(imageAsByte);
-                                    mBuilder.setContentText("Download complete")
+                                    //imgHandler.sendImage(imageAsByte);
+                                    mBuilder.setContentText("Transfer completed")
                                             .setProgress(0,0,false);
                                     notificationManager.notify(notificationID, mBuilder.build());
 

@@ -29,7 +29,7 @@ import java.util.ListIterator;
 public class ImageHandler {
 
     private boolean finished;
-    private File [] pics;
+    private List<File> picsFilesAsList;
     private List<byte[]> picsAsBytes;
     private List<String> picsNames;
     private Socket socket;
@@ -44,20 +44,14 @@ public class ImageHandler {
             dos = new DataOutputStream(out);
         }catch (Exception e){}
         this.picsNames = new ArrayList<>();
-        File dcim = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), "Camera");
-        if(dcim != null){
-            pics = dcim.listFiles();
-            for (File pic:pics){
-                this.picsNames.add(pic.getName());
-            }
-            //System.out.println("yay");
-            CovertToBitMapPics();
-        }
+        this.picsFilesAsList = new ArrayList<>();
+        String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM) + "//Camera";
+        this.ListAllFiles(path);
     }
     public void CovertToBitMapPics(){
         finished = false;
         this.picsAsBytes = new ArrayList<>();
-        for (File pic:pics){
+        for (File pic:picsFilesAsList){
             try {
                 FileInputStream fis = new FileInputStream(pic);
                 Bitmap bm = BitmapFactory.decodeStream(fis);
@@ -79,26 +73,6 @@ public class ImageHandler {
     public List<byte[]> getImageBytesList(){
         while(!finished){};
         return this.picsAsBytes;
-    }
-
-    public void sendImage(List<byte[]> pics) {
-        int counter = 0;
-        if (this.alreadySent == 0) {
-            for (byte[] picAsByte : pics) {
-                try {
-                    // sendBytes(start.getBytes());
-                    ///Thread.sleep(2000);
-                    sendBytes(picAsByte, counter);
-                    Thread.sleep(2000);
-                    ++counter;
-                    //sendBytes(end.getBytes());
-
-                } catch (Exception e) {
-                    System.out.println(e);
-                }
-            }
-            this.alreadySent = 1;
-        }
     }
 
     public void sendBytes(byte[] myByteArray, int index) throws IOException {
@@ -137,4 +111,47 @@ public class ImageHandler {
     public void setAlreadySent(int val){
         this.alreadySent = val;
     }
+    public void ListAllFiles(String path) {
+        // Get all the files from a directory.
+        //File[] fList = directory.listFiles();
+        File [] pics;
+        File dcim = new File(path);
+        if(dcim != null){
+            pics = dcim.listFiles();
+            for (File pic:pics){
+
+                if (pic.isFile()) {
+                    this.picsNames.add(pic.getName());
+                    this.picsFilesAsList.add(pic);
+                    //this.picsNames.add(pic);
+                } else if (pic.isDirectory()) {
+                    ListAllFiles(pic.getAbsolutePath());
+                }
+            }
+            //System.out.println("yay");
+            CovertToBitMapPics();
+        }
+
+    }
+    private String getFileExtension(File file) {
+        String name = file.getName();
+        try {
+            return name.substring(name.lastIndexOf(".") + 1);
+        } catch (Exception e) {
+            return "";
+        }
+    }
 }
+/*
+   for (File file : fList) {
+         File directory = new File(directoryName);
+
+   String directoryName, List<File> files
+            if (file.isFile()) {
+
+                files.add(file);
+            } else if (file.isDirectory()) {
+                listf(file.getAbsolutePath(), files);
+            }
+        }
+ */
