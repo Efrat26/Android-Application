@@ -131,4 +131,10 @@ public class ImageHandler {
         dos.writeUTF("end" + this.picsNames.get(index));
         dos.flush();
     }
+    public int AlreadySent(){
+        return this.alreadySent;
+    }
+    public void setAlreadySent(int val){
+        this.alreadySent = val;
+    }
 }

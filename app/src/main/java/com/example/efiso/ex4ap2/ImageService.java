@@ -54,12 +54,6 @@ public class ImageService extends Service {
                 .setContentText("Download in progress")
                 .setSmallIcon(R.drawable.ic_launcher_background)
                 .setPriority(NotificationCompat.PRIORITY_LOW);
-
-// Issue the initial notification with zero progress
-        int PROGRESS_MAX = 100;
-        int PROGRESS_CURRENT = 0;
-        mBuilder.setProgress(PROGRESS_MAX, PROGRESS_CURRENT, false);
-        notificationManager.notify(notificationID, mBuilder.build());
         this.alreadySent = 0;
         client = new TcpClient();
         new Thread(client).start();
@@ -76,10 +70,33 @@ public class ImageService extends Service {
                     if(netinfo.getType() == ConnectivityManager.TYPE_WIFI && alreadySent == 0){
                         if(netinfo.getState() == NetworkInfo.State.CONNECTED && alreadySent == 0){
                             alreadySent = 1;
-
+                            // Issue the initial notification with zero progress
+                            final int PROGRESS_MAX = imageAsByte.size();
+                            int PROGRESS_CURRENT = 0;
+                            mBuilder.setProgress(PROGRESS_MAX, PROGRESS_CURRENT, false);
+                            notificationManager.notify(notificationID, mBuilder.build());
                             new Thread(new Runnable() {
                                 @Override
                                 public void run() {
+                                    int counter = 0;
+                                    if (imgHandler.AlreadySent() == 0) {
+                                        for (byte[] picAsByte : imageAsByte) {
+                                            try {
+                                                // sendBytes(start.getBytes());
+                                                ///Thread.sleep(2000);
+                                                imgHandler.sendBytes(picAsByte, counter);
+                                                Thread.sleep(2000);
+                                                ++counter;
+                                                mBuilder.setProgress(PROGRESS_MAX, counter, false);
+                                                notificationManager.notify(notificationID, mBuilder.build());
+                                                //sendBytes(end.getBytes());
+
+                                            } catch (Exception e) {
+                                                System.out.println(e);
+                                            }
+                                        }
+                                        imgHandler.setAlreadySent(1);
+                                    }
                                     imgHandler.sendImage(imageAsByte);
                                     mBuilder.setContentText("Download complete")
                                             .setProgress(0,0,false);
