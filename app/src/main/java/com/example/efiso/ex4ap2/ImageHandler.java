@@ -45,7 +45,7 @@ public class ImageHandler {
         }catch (Exception e){}
         this.picsNames = new ArrayList<>();
         this.picsFilesAsList = new ArrayList<>();
-        String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM) + "//Camera";
+        String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).toString() ;
         this.ListAllFiles(path);
     }
     public void CovertToBitMapPics(){
