@@ -10,9 +10,11 @@ import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
@@ -36,13 +38,28 @@ public class ImageService extends Service {
     TcpClient client;
     ImageHandler imgHandler;
     private BroadcastReceiver reciever;
-    public static final String NOTIFICATION_CHANNEL_ID = "1";
+    private NotificationChannel channel;
+    NotificationManager notificationManager;
+    NotificationManagerCompat notificationManagerCompat;
+    NotificationCompat.Builder mBuilder;
+    final int notificationID = (int)System.currentTimeMillis();
     @Override
     public void onCreate() {
         super.onCreate();
-        final int notify_id=1;
-        final NotificationManager NM = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        final NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "default");
+        this.createNotificationChannel();
+
+        notificationManagerCompat = NotificationManagerCompat.from(this);
+        mBuilder = new NotificationCompat.Builder(this, "1");
+        mBuilder.setContentTitle("Picture Download")
+                .setContentText("Download in progress")
+                .setSmallIcon(R.drawable.ic_launcher_background)
+                .setPriority(NotificationCompat.PRIORITY_LOW);
+
+// Issue the initial notification with zero progress
+        int PROGRESS_MAX = 100;
+        int PROGRESS_CURRENT = 0;
+        mBuilder.setProgress(PROGRESS_MAX, PROGRESS_CURRENT, false);
+        notificationManager.notify(notificationID, mBuilder.build());
         this.alreadySent = 0;
         client = new TcpClient();
         new Thread(client).start();
@@ -59,29 +76,14 @@ public class ImageService extends Service {
                     if(netinfo.getType() == ConnectivityManager.TYPE_WIFI && alreadySent == 0){
                         if(netinfo.getState() == NetworkInfo.State.CONNECTED && alreadySent == 0){
                             alreadySent = 1;
-                            builder.setSmallIcon(R.drawable.ic_launcher_background);
-                            builder.setContentTitle("Download Status");
-                            builder.setContentText("Download in Progress");
-                            builder.setPriority(NotificationCompat.PRIORITY_LOW);
+
                             new Thread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    /*
-                                    for(int icr = 0; icr<= 100; icr+=5) {
-                                        builder.setProgress(100,icr,false);
-                                        NM.notify(notify_id, builder.build());
-                                        try {
-                                            Thread.sleep(2000);
-                                        } catch (Exception e){
-
-                                        }
-                                    }
-                                    */
-                                    builder.setProgress(0,0,false);
-                                    builder.setContentText("Download Completed");
-                                    NM.notify(1, builder.build());
-
                                     imgHandler.sendImage(imageAsByte);
+                                    mBuilder.setContentText("Download complete")
+                                            .setProgress(0,0,false);
+                                    notificationManager.notify(notificationID, mBuilder.build());
 
                                 }
                             }).start();
@@ -112,6 +114,23 @@ public class ImageService extends Service {
     public IBinder onBind(Intent intent) {
         return null;
     }
+
+    private void createNotificationChannel() {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = getString(R.string.channel_name);
+            String description = getString(R.string.channel_description);
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+             channel = new NotificationChannel("1", name, importance);
+            channel.setDescription(description);
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+             notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
 
     class TcpClient implements Runnable {
         private Socket socket;

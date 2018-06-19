@@ -123,6 +123,11 @@ public class ImageHandler {
             dos.write(myByteArray, start, len);
             dos.flush();
         }
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         dos.writeUTF("end" + this.picsNames.get(index));
         dos.flush();
     }
