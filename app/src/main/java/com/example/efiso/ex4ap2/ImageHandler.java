@@ -1,9 +1,12 @@
 package com.example.efiso.ex4ap2;
 
+import android.app.NotificationManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Environment;
 import android.support.annotation.NonNull;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -24,6 +27,7 @@ import java.util.ListIterator;
  */
 
 public class ImageHandler {
+
     private boolean finished;
     private File [] pics;
     private List<byte[]> picsAsBytes;
