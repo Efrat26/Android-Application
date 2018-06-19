@@ -1,7 +1,13 @@
 package com.example.efiso.ex4ap2;
 
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.wifi.WifiManager;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.widget.Toast;
@@ -19,29 +25,46 @@ import java.util.List;
  */
 
 public class ImageService extends Service {
-    private static final String start = "BEGIN";
-    private static final String end = "END";
+    private int alreadySent;
+    final IntentFilter theFilter = new IntentFilter();
     private static final int SERVER_PORT = 9000;
     private static final String SERVER_IP = "10.0.2.2";
     private List<byte[]> imageAsByte;
     TcpClient client;
     ImageHandler imgHandler;
+    private BroadcastReceiver reciever;
 
     @Override
     public void onCreate() {
         super.onCreate();
+        this.alreadySent = 0;
         client = new TcpClient();
         new Thread(client).start();
         imgHandler = new ImageHandler(client.getSocket());
         this.imageAsByte = imgHandler.getImageBytesList();
-        new Thread(new Runnable() {
+        theFilter.addAction("android.net.wifi.supplicant.CONNECTION_CHANGE");
+        theFilter.addAction("android.net.wifi.STATE_CHANGE");
+        this.reciever = new BroadcastReceiver() {
             @Override
-            public void run() {
-                imgHandler.sendImage(imageAsByte);
+            public void onReceive(Context context, Intent intent) {
+                WifiManager wifimanager = (WifiManager)context.getSystemService(Context.WIFI_SERVICE);
+                NetworkInfo netinfo = intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
+                if(netinfo != null && alreadySent == 0){
+                    if(netinfo.getType() == ConnectivityManager.TYPE_WIFI && alreadySent == 0){
+                        if(netinfo.getState() == NetworkInfo.State.CONNECTED && alreadySent == 0){
+                            alreadySent = 1;
+                            new Thread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    imgHandler.sendImage(imageAsByte);
+                                }
+                            }).start();
+                        }
+                    }
+                }
             }
-        }).start();
-
-
+        };
+        this.registerReceiver(this.reciever, theFilter);
     }
 
     @Override

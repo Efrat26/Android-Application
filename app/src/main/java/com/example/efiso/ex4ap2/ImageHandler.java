@@ -27,18 +27,25 @@ public class ImageHandler {
     private boolean finished;
     private File [] pics;
     private List<byte[]> picsAsBytes;
+    private List<String> picsNames;
     private Socket socket;
     OutputStream out;
     DataOutputStream dos;
+    private  int alreadySent;
     public ImageHandler(Socket s){
+        this.alreadySent = 0;
         this.socket = s;
         try {
             out = socket.getOutputStream();
             dos = new DataOutputStream(out);
         }catch (Exception e){}
+        this.picsNames = new ArrayList<>();
         File dcim = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), "Camera");
         if(dcim != null){
             pics = dcim.listFiles();
+            for (File pic:pics){
+                this.picsNames.add(pic.getName());
+            }
             //System.out.println("yay");
             CovertToBitMapPics();
         }
@@ -71,25 +78,30 @@ public class ImageHandler {
     }
 
     public void sendImage(List<byte[]> pics) {
-        for (byte[] picAsByte : pics) {
-            try {
-                // sendBytes(start.getBytes());
-                ///Thread.sleep(2000);
-                sendBytes(picAsByte);
-                Thread.sleep(2000);
-                //sendBytes(end.getBytes());
+        int counter = 0;
+        if (this.alreadySent == 0) {
+            for (byte[] picAsByte : pics) {
+                try {
+                    // sendBytes(start.getBytes());
+                    ///Thread.sleep(2000);
+                    sendBytes(picAsByte, counter);
+                    Thread.sleep(2000);
+                    ++counter;
+                    //sendBytes(end.getBytes());
 
-            } catch (Exception e) {
-                System.out.println(e);
+                } catch (Exception e) {
+                    System.out.println(e);
+                }
             }
+            this.alreadySent = 1;
         }
     }
 
-    public void sendBytes(byte[] myByteArray) throws IOException {
-        sendBytes(myByteArray, 0, myByteArray.length);
+    public void sendBytes(byte[] myByteArray, int index) throws IOException {
+        sendBytes(myByteArray, 0, myByteArray.length, index);
     }
 
-    public void sendBytes(byte[] myByteArray, int start, int len) throws IOException {
+    public void sendBytes(byte[] myByteArray, int start, int len, int index) throws IOException {
         if (len < 0)
             throw new IllegalArgumentException("Negative length not allowed");
         if (start < 0 || start >= myByteArray.length)
@@ -107,7 +119,7 @@ public class ImageHandler {
             dos.write(myByteArray, start, len);
             dos.flush();
         }
-        dos.writeUTF("end");
+        dos.writeUTF("end" + this.picsNames.get(index));
         dos.flush();
     }
 }
