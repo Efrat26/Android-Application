@@ -30,6 +30,9 @@ import java.util.List;
  * Created by efiso on 16/06/2018.
  */
 
+/*
+the image service class
+ */
 public class ImageService extends Service {
     private int alreadySent;
     final IntentFilter theFilter = new IntentFilter();
@@ -44,11 +47,16 @@ public class ImageService extends Service {
     NotificationManagerCompat notificationManagerCompat;
     NotificationCompat.Builder mBuilder;
     final int notificationID = (int)System.currentTimeMillis();
+    /*
+    creates a socket and connect to the service. define what to do when wifi is connected & the
+     progress bar
+     */
     @Override
     public void onCreate() {
         super.onCreate();
+        //opens a channel of notification
         this.createNotificationChannel();
-
+        //other progress bar initializations
         notificationManagerCompat = NotificationManagerCompat.from(this);
         mBuilder = new NotificationCompat.Builder(this, "1");
         mBuilder.setContentTitle("Picture Transfer")
@@ -56,10 +64,12 @@ public class ImageService extends Service {
                 .setSmallIcon(R.drawable.ic_launcher_background)
                 .setPriority(NotificationCompat.PRIORITY_LOW);
         this.alreadySent = 0;
+        //connect to the service
         client = new TcpClient();
         new Thread(client).start();
+        //creates an image handler object
         imgHandler = new ImageHandler(client.getSocket());
-
+        //broadcast receiver
         theFilter.addAction("android.net.wifi.supplicant.CONNECTION_CHANGE");
         theFilter.addAction("android.net.wifi.STATE_CHANGE");
         this.reciever = new BroadcastReceiver() {
@@ -118,7 +128,9 @@ public class ImageService extends Service {
         };
         this.registerReceiver(this.reciever, theFilter);
     }
-
+    /*
+        shows a message when the service started
+     */
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
@@ -126,7 +138,9 @@ public class ImageService extends Service {
                 Toast.LENGTH_LONG).show();
         return START_STICKY;
     }
-
+    /*
+       on close - disconnect the socket and show a suitable message
+    */
     @Override
     public void onDestroy() {
         try {
@@ -144,7 +158,9 @@ public class ImageService extends Service {
     public IBinder onBind(Intent intent) {
         return null;
     }
-
+    /*
+     creates a notification channel
+    */
     private void createNotificationChannel() {
         // Create the NotificationChannel, but only on API 26+ because
         // the NotificationChannel class is new and not in the support library
@@ -161,7 +177,9 @@ public class ImageService extends Service {
         }
     }
 
-
+    /*
+      a class that is responsible for connecting to the service. tries twice to connect
+    */
     class TcpClient implements Runnable {
         private Socket socket;
         ByteArrayOutputStream outToServer;

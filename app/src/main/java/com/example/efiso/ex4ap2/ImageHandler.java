@@ -25,7 +25,9 @@ import java.util.ListIterator;
 /**
  * Created by efiso on 18/06/2018.
  */
-
+ /*
+   a class that is responsible for sending the images
+ */
 public class ImageHandler {
 
     private boolean finished;
@@ -36,6 +38,9 @@ public class ImageHandler {
     OutputStream out;
     DataOutputStream dos;
     private  int alreadySent;
+    /*
+       opens a data stream & initializes lists
+    */
     public ImageHandler(Socket s){
         this.alreadySent = 0;
         this.socket = s;
@@ -48,6 +53,9 @@ public class ImageHandler {
         //String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).toString() ;
        // this.ListAllFiles(path);
     }
+    /*
+       converts images to a bitmap pictures
+    */
     public void CovertToBitMapPics(){
         finished = false;
         this.picsAsBytes = new ArrayList<>();
@@ -65,20 +73,31 @@ public class ImageHandler {
         finished = true;
 
     }
+    /*
+       gets the bytes from the image
+    */
     public byte[] getBytesFromBitmap(Bitmap bm){
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         bm.compress(Bitmap.CompressFormat.PNG,70,stream);
         return stream.toByteArray();
     }
+    /*
+       returns the list with pictures with bytes
+    */
     public List<byte[]> getImageBytesList(){
         while(!finished){};
         return this.picsAsBytes;
     }
-
+    /*
+       calls send bytes to send the image bytes
+    */
     public void sendBytes(byte[] myByteArray, int index) throws IOException {
         sendBytes(myByteArray, 0, myByteArray.length, index);
     }
-
+    /*
+       sends to the service the images. before sending the image it sends "begin" and the length
+       of the image. after sending the image it sends "end" and the name of the image.
+    */
     public void sendBytes(byte[] myByteArray, int start, int len, int index) throws IOException {
         if (len < 0)
             throw new IllegalArgumentException("Negative length not allowed");
@@ -105,12 +124,21 @@ public class ImageHandler {
         dos.writeUTF("end" + this.picsNames.get(index));
         dos.flush();
     }
+    /*
+       gets the already send variable
+    */
     public int AlreadySent(){
         return this.alreadySent;
     }
+    /*
+       sets the already send variable
+    */
     public void setAlreadySent(int val){
         this.alreadySent = val;
     }
+    /*
+       list all the files in the DCIM recursively
+    */
     public void ListAllFiles(String path, boolean isRecursiveCall) {
         // Get all the files from a directory.
         //File[] fList = directory.listFiles();
@@ -139,6 +167,9 @@ public class ImageHandler {
         }
 
     }
+    /*
+       gets the file's extension
+    */
     private String getFileExtension(File file) {
         String name = file.getName();
         try {
@@ -148,16 +179,3 @@ public class ImageHandler {
         }
     }
 }
-/*
-   for (File file : fList) {
-         File directory = new File(directoryName);
-
-   String directoryName, List<File> files
-            if (file.isFile()) {
-
-                files.add(file);
-            } else if (file.isDirectory()) {
-                listf(file.getAbsolutePath(), files);
-            }
-        }
- */
