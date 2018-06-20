@@ -22,5 +22,6 @@ public class MainActivity extends AppCompatActivity {
     {
         Intent service = new Intent(this,ImageService.class);
         stopService(service);
+        //finish();
     }
 }

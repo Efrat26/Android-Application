@@ -11,6 +11,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
+import android.os.Environment;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
@@ -58,7 +59,7 @@ public class ImageService extends Service {
         client = new TcpClient();
         new Thread(client).start();
         imgHandler = new ImageHandler(client.getSocket());
-        this.imageAsByte = imgHandler.getImageBytesList();
+
         theFilter.addAction("android.net.wifi.supplicant.CONNECTION_CHANGE");
         theFilter.addAction("android.net.wifi.STATE_CHANGE");
         this.reciever = new BroadcastReceiver() {
@@ -70,6 +71,12 @@ public class ImageService extends Service {
                     if(netinfo.getType() == ConnectivityManager.TYPE_WIFI && alreadySent == 0){
                         if(netinfo.getState() == NetworkInfo.State.CONNECTED && alreadySent == 0){
                             alreadySent = 1;
+                            String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).toString() ;
+                            imgHandler.ListAllFiles(path, false);
+                            if(imageAsByte != null){
+                                imageAsByte.clear();
+                            }
+                            imageAsByte = imgHandler.getImageBytesList();
                             // Issue the initial notification with zero progress
                             final int PROGRESS_MAX = imageAsByte.size();
                             int PROGRESS_CURRENT = 0;
@@ -95,7 +102,7 @@ public class ImageService extends Service {
                                                 System.out.println(e);
                                             }
                                         }
-                                        imgHandler.setAlreadySent(1);
+                                       // imgHandler.setAlreadySent(1);
                                     }
                                     //imgHandler.sendImage(imageAsByte);
                                     mBuilder.setContentText("Transfer completed")
@@ -122,8 +129,14 @@ public class ImageService extends Service {
 
     @Override
     public void onDestroy() {
+        try {
+            client.socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         Toast.makeText(this, getResources().getString(R.string.service_destroy),
                 Toast.LENGTH_LONG).show();
+
     }
 
     @Nullable

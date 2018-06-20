@@ -45,8 +45,8 @@ public class ImageHandler {
         }catch (Exception e){}
         this.picsNames = new ArrayList<>();
         this.picsFilesAsList = new ArrayList<>();
-        String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).toString() ;
-        this.ListAllFiles(path);
+        //String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).toString() ;
+       // this.ListAllFiles(path);
     }
     public void CovertToBitMapPics(){
         finished = false;
@@ -111,9 +111,15 @@ public class ImageHandler {
     public void setAlreadySent(int val){
         this.alreadySent = val;
     }
-    public void ListAllFiles(String path) {
+    public void ListAllFiles(String path, boolean isRecursiveCall) {
         // Get all the files from a directory.
         //File[] fList = directory.listFiles();
+        if(picsNames != null && !isRecursiveCall){
+            picsNames.clear();
+        }
+        if(picsFilesAsList !=null && !isRecursiveCall){
+            picsFilesAsList.clear();
+        }
         File [] pics;
         File dcim = new File(path);
         if(dcim != null){
@@ -125,7 +131,7 @@ public class ImageHandler {
                     this.picsFilesAsList.add(pic);
                     //this.picsNames.add(pic);
                 } else if (pic.isDirectory()) {
-                    ListAllFiles(pic.getAbsolutePath());
+                    ListAllFiles(pic.getAbsolutePath(), true);
                 }
             }
             //System.out.println("yay");
